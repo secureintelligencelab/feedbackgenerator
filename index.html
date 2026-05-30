@@ -298,6 +298,8 @@
 <main>
   <aside id="sidebar">
     <h2>Categories</h2>
+    <input type="text" id="catSearch" placeholder="Filter categories…" oninput="renderSidebar()"
+      style="width:100%;font-family:inherit;font-size:13.5px;padding:7px 10px;margin-bottom:12px;border:1px solid var(--line);border-radius:3px;background:#fffdf7;color:var(--ink)">
     <div id="catList"></div>
     <div class="side-actions">
       <button class="btn ghost small" onclick="openCategoryModal()">+ New Category</button>
@@ -599,7 +601,13 @@ function renderSidebar(){
     list.innerHTML = `<p style="font-size:13px;color:#9a8e72;font-style:italic">No categories yet. Create one to begin.</p>`;
     return;
   }
-  list.innerHTML = categories.map(c=>{
+  const term = ($("catSearch")?.value || "").trim().toLowerCase();
+  const visible = term ? categories.filter(c=>(c.name||"").toLowerCase().includes(term)) : categories;
+  if(!visible.length){
+    list.innerHTML = `<p style="font-size:13px;color:#9a8e72;font-style:italic">No categories match "${esc(term)}".</p>`;
+    return;
+  }
+  list.innerHTML = visible.map(c=>{
     const n = comments.filter(x=>x.category_id===c.id).length;
     return `<button class="cat-btn ${c.id===activeCat?'active':''}" onclick="selectCat(${c.id})">
       <span>${esc(c.name)}</span>
@@ -644,16 +652,17 @@ function render(){
   // assign a serial number to each criterion (stable order)
   const idOf = k => "crit-" + k.replace(/[^a-z0-9]/gi,"_");
 
-  // quick-jump bar: serial number + name, click to scroll & expand
+  // quick-select bar: serial number + name, click to select/unselect the whole criterion
   const quickjump = keys.length>1 ? `
     <div class="quickjump">
-      <span class="qj-label">Jump to</span>
+      <span class="qj-label">Quick Select</span>
       ${keys.map((k,i)=>{
         const items = groups[k];
         const selCount = items.filter(c=>tray.find(t=>t.id===c.id)).length;
-        return `<button class="qj-pill ${selCount?'has-sel':''}" onclick="jumpTo('${escAttr(k)}')">
+        const allSel = selCount===items.length;
+        return `<button class="qj-pill ${selCount?'has-sel':''}" title="${allSel?'Unselect':'Select'} all comments under “${escAttr(k)}”" onclick="selectGroup('${escAttr(k)}',${!allSel})">
           <span class="qj-num">${i+1}</span>${esc(k)}
-          <span class="qj-count">(${items.length})</span>
+          <span class="qj-count">${selCount?selCount+'/':''}${items.length}</span>
         </button>`;
       }).join("")}
     </div>` : "";
