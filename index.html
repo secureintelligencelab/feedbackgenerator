@@ -7,13 +7,16 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --ink:#1a1814;
-    --paper:#f4f0e6;
-    --paper-2:#ece6d6;
-    --line:#cabfa3;
+    --ink:#241f18;
+    --paper:#efe9da;
+    --paper-2:#e4dcc8;
+    --line:#c7ba99;
+    --line-soft:#dcd2ba;
     --accent:#9a3b2e;
     --accent-2:#3a5a40;
+    --accent-2-soft:#e7efe7;
     --gold:#b08d3a;
+    --sidebar-bg:#fbf8f0;
     --shadow:rgba(40,30,15,.18);
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -21,9 +24,11 @@
   body{
     font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
     background:
-      radial-gradient(circle at 20% 10%, #fbf7ec, transparent 40%),
-      radial-gradient(circle at 90% 90%, #e9e1cd, transparent 45%),
-      var(--paper);
+      radial-gradient(circle at 15% -5%, #fefcf6, transparent 45%),
+      radial-gradient(circle at 95% 5%, #f6efdd, transparent 40%),
+      radial-gradient(circle at 50% 120%, #e2d8c0, transparent 55%),
+      linear-gradient(160deg, #f3eddd 0%, var(--paper) 55%, #e9e1cd 100%);
+    background-attachment:fixed;
     color:var(--ink);
     line-height:1.5;
     min-height:100vh;
@@ -53,29 +58,60 @@
   main{display:flex;min-height:calc(100vh - 100px)}
   /* sidebar */
   #sidebar{
-    width:260px;flex-shrink:0;border-right:2px solid var(--line);
-    padding:22px 18px;background:rgba(255,255,255,.25);
+    width:280px;flex-shrink:0;border-right:1px solid var(--line);
+    padding:0;background:var(--sidebar-bg);
+    box-shadow:1px 0 0 rgba(255,255,255,.6) inset;
+    display:flex;flex-direction:column;
+    position:sticky;top:0;align-self:flex-start;
+    max-height:100vh;
+  }
+  .sidebar-inner{
+    padding:22px 16px;display:flex;flex-direction:column;
+    min-height:0;flex:1;
   }
   #sidebar h2{
     font-size:12px;text-transform:uppercase;letter-spacing:2px;
-    color:var(--accent);margin-bottom:14px;border-bottom:1px solid var(--line);
-    padding-bottom:8px;
+    color:var(--accent);margin-bottom:12px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
   }
+  #sidebar h2 .cat-total{
+    font-size:11px;letter-spacing:.5px;color:#8a7e62;text-transform:none;
+    background:var(--paper-2);border:1px solid var(--line);
+    border-radius:10px;padding:1px 8px;font-weight:400;
+  }
+  .cat-search-wrap{position:relative;margin-bottom:6px}
+  .cat-search-wrap .clear-cat{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    border:none;background:none;cursor:pointer;color:#a8966a;font-size:15px;
+    display:none;line-height:1;padding:2px;
+  }
+  .cat-search-wrap .clear-cat:hover{color:var(--accent)}
+  .cat-search-wrap.has-text .clear-cat{display:block}
+  #catList{
+    overflow-y:auto;margin:8px -4px 0;padding:0 4px;flex:1;min-height:0;
+  }
+  #catList::-webkit-scrollbar{width:8px}
+  #catList::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
   .cat-btn{
-    display:flex;justify-content:space-between;align-items:center;
-    width:100%;text-align:left;border:none;background:transparent;
-    font-family:inherit;font-size:16px;color:var(--ink);cursor:pointer;
-    padding:9px 12px;border-radius:3px;margin-bottom:3px;transition:.15s;
-    border-left:3px solid transparent;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    width:100%;text-align:left;border:1px solid transparent;background:transparent;
+    font-family:inherit;font-size:15.5px;color:var(--ink);cursor:pointer;
+    padding:10px 12px;border-radius:6px;margin-bottom:4px;transition:.13s;
+    border-left:3px solid transparent;line-height:1.25;
   }
-  .cat-btn:hover{background:var(--paper-2)}
-  .cat-btn.active{background:#fff;border-left:3px solid var(--accent);font-weight:700}
+  .cat-btn span:first-child{flex:1;overflow-wrap:anywhere}
+  .cat-btn:hover{background:#fff;border-color:var(--line-soft)}
+  .cat-btn.active{
+    background:#fff;border-color:var(--accent);
+    border-left:3px solid var(--accent);font-weight:700;
+    box-shadow:0 1px 4px rgba(154,59,46,.15);
+  }
   .cat-btn .count{
     font-size:11px;background:var(--paper-2);border:1px solid var(--line);
-    border-radius:10px;padding:1px 8px;color:#6b5f48;
+    border-radius:10px;padding:1px 8px;color:#6b5f48;flex-shrink:0;font-weight:400;
   }
   .cat-btn.active .count{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .side-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+  .side-actions{margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft);display:flex;flex-direction:column;gap:8px}
   /* content */
   #content{flex:1;padding:24px 30px;overflow-y:auto}
   .toolbar{
@@ -122,31 +158,43 @@
   }
   .tray-line .rm:hover{color:var(--accent)}
   .tray-actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
-  /* ---- quick-jump bar ---- */
+  /* ---- quick-select bar ---- */
   .quickjump{
-    display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;
-    padding:12px 14px;border:1px solid var(--line);border-radius:6px;
-    background:rgba(255,255,255,.4);align-items:center;
+    display:flex;flex-wrap:wrap;gap:9px;margin-bottom:18px;
+    padding:14px 16px 14px;border:1px solid var(--accent-2);
+    border-radius:8px;align-items:center;
+    background:linear-gradient(180deg,#f1f6f1,#e9f1e9);
+    box-shadow:0 2px 10px rgba(58,90,64,.1);
   }
   .quickjump .qj-label{
     font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
-    color:var(--accent);margin-right:4px;font-weight:700;
+    color:#fff;margin-right:6px;font-weight:700;
+    background:var(--accent-2);padding:5px 11px;border-radius:14px;
+    display:inline-flex;align-items:center;gap:6px;
   }
+  .quickjump .qj-label:before{content:"✦";font-size:11px}
   .qj-pill{
     font-family:inherit;font-size:13.5px;cursor:pointer;
-    padding:6px 13px;border-radius:20px;border:1px solid var(--line);
-    background:var(--paper);color:#3a342a;transition:.12s;
-    display:inline-flex;align-items:center;gap:7px;
+    padding:6px 13px 6px 7px;border-radius:20px;border:1px solid #b9cdba;
+    background:#fff;color:#2f3a30;transition:.13s;
+    display:inline-flex;align-items:center;gap:8px;
   }
-  .qj-pill:hover{border-color:var(--accent-2);background:#fff}
+  .qj-pill:hover{border-color:var(--accent-2);box-shadow:0 2px 6px rgba(58,90,64,.2);transform:translateY(-1px)}
   .qj-num{
     font-size:11px;font-weight:700;color:#fff;background:var(--accent-2);
-    width:18px;height:18px;border-radius:50%;display:inline-flex;
-    align-items:center;justify-content:center;
+    width:20px;height:20px;border-radius:50%;display:inline-flex;
+    align-items:center;justify-content:center;flex-shrink:0;
   }
-  .qj-pill .qj-count{font-size:11px;color:#9a8e72}
-  .qj-pill.has-sel{border-color:var(--gold);background:#fffaec}
+  .qj-pill .qj-count{
+    font-size:10.5px;color:#7a8a7c;background:#eef4ee;
+    border-radius:9px;padding:1px 7px;font-weight:700;
+  }
+  .qj-pill.has-sel{
+    border-color:var(--gold);background:linear-gradient(180deg,#fffaec,#fff4d6);
+    color:#5c4a1e;font-weight:700;box-shadow:0 2px 8px rgba(176,141,58,.28);
+  }
   .qj-pill.has-sel .qj-num{background:var(--gold)}
+  .qj-pill.has-sel .qj-count{background:var(--gold);color:#fff}
 
   /* ---- criterion grid ---- */
   .crit-grid{
@@ -277,7 +325,11 @@
   .setup-note pre{padding:14px;overflow-x:auto;margin:12px 0;white-space:pre-wrap}
   @media(max-width:760px){
     main{flex-direction:column}
-    #sidebar{width:100%;border-right:none;border-bottom:2px solid var(--line)}
+    #sidebar{
+      width:100%;border-right:none;border-bottom:1px solid var(--line);
+      position:static;max-height:none;
+    }
+    #catList{max-height:300px}
   }
 </style>
 </head>
@@ -297,12 +349,18 @@
 
 <main>
   <aside id="sidebar">
-    <h2>Categories</h2>
-    <input type="text" id="catSearch" placeholder="Filter categories…" oninput="renderSidebar()"
-      style="width:100%;font-family:inherit;font-size:13.5px;padding:7px 10px;margin-bottom:12px;border:1px solid var(--line);border-radius:3px;background:#fffdf7;color:var(--ink)">
-    <div id="catList"></div>
-    <div class="side-actions">
-      <button class="btn ghost small" onclick="openCategoryModal()">+ New Category</button>
+    <div class="sidebar-inner">
+      <h2>Categories <span class="cat-total" id="catTotal"></span></h2>
+      <div class="cat-search-wrap" id="catSearchWrap">
+        <input type="text" id="catSearch" placeholder="🔍  Filter categories…" oninput="renderSidebar()"
+          style="width:100%;font-family:inherit;font-size:13.5px;padding:8px 28px 8px 11px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)">
+        <button class="clear-cat" title="Clear" onclick="clearCatSearch()">✕</button>
+      </div>
+      <div id="catCount" style="font-size:11px;color:#8a7e62;min-height:14px;margin:2px 2px 0"></div>
+      <div id="catList"></div>
+      <div class="side-actions">
+        <button class="btn ghost small" onclick="openCategoryModal()">+ New Category</button>
+      </div>
     </div>
   </aside>
 
@@ -597,23 +655,49 @@ async function loadAll(){
 
 function renderSidebar(){
   const list = $("catList");
+  const totalEl = $("catTotal");
+  const countEl = $("catCount");
+  const wrap = $("catSearchWrap");
+  if(totalEl) totalEl.textContent = categories.length ? categories.length : "";
   if(!categories.length){
     list.innerHTML = `<p style="font-size:13px;color:#9a8e72;font-style:italic">No categories yet. Create one to begin.</p>`;
+    if(countEl) countEl.textContent = "";
     return;
   }
   const term = ($("catSearch")?.value || "").trim().toLowerCase();
+  if(wrap) wrap.classList.toggle("has-text", !!term);
   const visible = term ? categories.filter(c=>(c.name||"").toLowerCase().includes(term)) : categories;
+  if(countEl) countEl.textContent = term ? `${visible.length} of ${categories.length} match` : "";
   if(!visible.length){
-    list.innerHTML = `<p style="font-size:13px;color:#9a8e72;font-style:italic">No categories match "${esc(term)}".</p>`;
+    list.innerHTML = `<p style="font-size:13px;color:#9a8e72;font-style:italic">No categories match “${esc(term)}”.</p>`;
     return;
   }
   list.innerHTML = visible.map(c=>{
     const n = comments.filter(x=>x.category_id===c.id).length;
     return `<button class="cat-btn ${c.id===activeCat?'active':''}" onclick="selectCat(${c.id})">
-      <span>${esc(c.name)}</span>
+      <span>${highlight(c.name, term)}</span>
       <span class="count">${n}</span>
     </button>`;
   }).join("");
+}
+
+function highlight(name, term){
+  const safe = esc(name);
+  if(!term) return safe;
+  const lower = (name||"").toLowerCase();
+  const i = lower.indexOf(term);
+  if(i<0) return safe;
+  // map index onto escaped string by re-escaping each segment
+  const before = esc(name.slice(0, i));
+  const match  = esc(name.slice(i, i+term.length));
+  const after  = esc(name.slice(i+term.length));
+  return `${before}<mark style="background:var(--gold);color:#fff;border-radius:2px;padding:0 1px">${match}</mark>${after}`;
+}
+
+function clearCatSearch(){
+  const el = $("catSearch");
+  if(el){ el.value=""; el.focus(); }
+  renderSidebar();
 }
 
 function selectCat(id){ activeCat = id; renderSidebar(); render(); $("search").value=""; }
